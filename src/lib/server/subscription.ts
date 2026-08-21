@@ -65,7 +65,8 @@ export function hasActiveSubscription(professional: SubscriptionFields): boolean
 }
 
 /**
- * Início do ciclo atual: um mês antes da data de expiração. Sem data, cai no
+ * Início do ciclo atual: o aniversário mensal mais recente, contado a partir da
+ * data de expiração. Vale tanto pro mensal quanto pro anual. Sem data, cai no
  * mês do calendário como último recurso.
  */
 export function currentCycleStart(professional: CycleFields): Date {
@@ -80,8 +81,28 @@ export function currentCycleStart(professional: CycleFields): Date {
 		const now = new Date();
 		return new Date(now.getFullYear(), now.getMonth(), 1);
 	}
-	const start = new Date(expires);
-	start.setMonth(start.getMonth() - 1);
+	// A franquia é MENSAL mesmo em plano anual, então o ciclo é o aniversário
+	// mensal corrente dentro do contrato. Retroceder um mês só funcionava no
+	// mensal: no anual o vencimento está a doze meses daqui, o início do ciclo
+	// caía no FUTURO e countGenerationsSince() devolvia sempre zero, liberando
+	// franquia ilimitada até o último mês do contrato.
+	//
+	// Recua mês a mês recalculando a partir do dia original em vez de encadear
+	// setMonth(): vencimento em dia 29-31 rola de mês em fevereiro, e com
+	// setMonth encadeado esse erro se acumularia a cada passo.
+	const agora = new Date();
+	const dia = expires.getDate();
+	let ano = expires.getFullYear();
+	let mes = expires.getMonth();
+	let start: Date;
+	do {
+		mes -= 1;
+		if (mes < 0) {
+			mes = 11;
+			ano -= 1;
+		}
+		start = new Date(ano, mes, dia, expires.getHours(), expires.getMinutes(), expires.getSeconds());
+	} while (start > agora);
 	return start;
 }
 

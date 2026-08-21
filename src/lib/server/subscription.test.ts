@@ -92,4 +92,49 @@ describe('currentCycleStart', () => {
 		expect(start.getDate()).toBe(1);
 		expect(start.getMonth()).toBe(new Date().getMonth());
 	});
+
+	// Regressão: com um passo fixo de um mês, o plano anual colocava o início do
+	// ciclo no futuro e a franquia virava ilimitada por onze meses.
+	it('plano anual: o início do ciclo nunca fica no futuro', () => {
+		const expires = new Date();
+		expires.setFullYear(expires.getFullYear() + 1);
+
+		const start = currentCycleStart({
+			subscriptionStatus: 'active',
+			subscriptionExpiresAt: expires
+		});
+
+		expect(start.getTime()).toBeLessThanOrEqual(Date.now());
+	});
+
+	it('plano anual: o ciclo é o mês corrente, não o contrato inteiro', () => {
+		const expires = new Date();
+		expires.setFullYear(expires.getFullYear() + 1);
+
+		const start = currentCycleStart({
+			subscriptionStatus: 'active',
+			subscriptionExpiresAt: expires
+		});
+
+		// Janela de no máximo ~31 dias: se pegasse o contrato inteiro, a franquia
+		// mensal passaria a valer pelo ano todo.
+		const limite = Date.now() - 32 * 86_400_000;
+		expect(start.getTime()).toBeGreaterThan(limite);
+	});
+
+	it('vencimento no fim do mês não acumula erro a cada recuo', () => {
+		// Dia 31 com recuo encadeado cairia em fevereiro e desviaria a cada passo.
+		const expires = new Date();
+		expires.setFullYear(expires.getFullYear() + 1);
+		expires.setMonth(0);
+		expires.setDate(31);
+
+		const start = currentCycleStart({
+			subscriptionStatus: 'active',
+			subscriptionExpiresAt: expires
+		});
+
+		expect(start.getTime()).toBeLessThanOrEqual(Date.now());
+		expect(start.getTime()).toBeGreaterThan(Date.now() - 62 * 86_400_000);
+	});
 });
