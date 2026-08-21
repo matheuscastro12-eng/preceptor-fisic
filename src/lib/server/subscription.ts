@@ -31,8 +31,15 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
 	// a geração por IA, não a linha no banco. Cadastrar aluno é justamente o
 	// que faz a pessoa se apropriar do produto.
 	trial: { students: 10, generations: 2 },
-	essencial: { students: 60, generations: 20 },
-	pro: { students: 150, generations: 50 },
+	basico: { students: 40, generations: 8 },
+	essencial: { students: 60, generations: 11 },
+	pro: { students: 150, generations: 25 },
+	// Tabela anterior a agosto/2026. NÃO estão à venda: existem pra quem assinou
+	// antes manter a franquia que contratou. Rebaixar quem já paga seria quebrar
+	// o combinado, e a renovação dessas assinaturas chega com o valor antigo
+	// (ver LEGACY_VALUES no asaas.ts).
+	essencial_legacy: { students: 60, generations: 20 },
+	pro_legacy: { students: 150, generations: 50 },
 	institucional: { students: null, generations: 100 },
 	// Contas internas do time, sem teto.
 	'admin-test': { students: null, generations: null }

@@ -187,9 +187,33 @@
 
 	const PLANS: Plan[] = [
 		{
+			name: 'Básico',
+			desc: 'Para quem está começando a atender população especial.',
+			items: [
+				'Até 40 alunos ativos',
+				'Até 8 treinos gerados por IA/mês',
+				'Histórico completo de planos',
+				'Suporte por e-mail'
+			],
+			cta: 'Começar agora',
+			featured: false,
+			mensal: {
+				price: 'R$ 39,90',
+				period: '/mês',
+				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=basico_mensal')
+			},
+			anual: {
+				price: 'R$ 399,00',
+				period: '/ano',
+				was: 'R$ 478,80',
+				equiv: 'equivale a R$ 33,25/mês',
+				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=basico_anual')
+			}
+		},
+		{
 			name: 'Essencial',
 			desc: 'Para o profissional em crescimento.',
-			items: ['Até 60 alunos ativos', 'Até 20 treinos gerados por IA/mês', 'Histórico completo de planos', 'Suporte por e-mail'],
+			items: ['Até 60 alunos ativos', 'Até 11 treinos gerados por IA/mês', 'Histórico completo de planos', 'Suporte por e-mail'],
 			/* Cadastro grátis primeiro; a assinatura é feita em /assinatura dentro
 			   do app (customer Asaas criado com o email da conta → match
 			   determinístico no webhook). Links diretos do Asaas ficam pra venda
@@ -197,34 +221,34 @@
 			cta: 'Começar agora',
 			featured: false,
 			mensal: {
-				price: 'R$ 69,90',
+				price: 'R$ 49,90',
 				period: '/mês',
 				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=essencial_mensal')
 			},
 			anual: {
-				price: 'R$ 699,00',
+				price: 'R$ 499,00',
 				period: '/ano',
-				was: 'R$ 838,80',
-				equiv: 'equivale a R$ 58,25/mês',
+				was: 'R$ 598,80',
+				equiv: 'equivale a R$ 41,58/mês',
 				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=essencial_anual')
 			}
 		},
 		{
 			name: 'Pro',
 			desc: 'Para quem vive de prescrição clínica.',
-			items: ['Até 150 alunos ativos', 'Até 50 treinos gerados por IA/mês', 'Auditoria completa de cada plano', 'Prioridade na geração'],
+			items: ['Até 150 alunos ativos', 'Até 25 treinos gerados por IA/mês', 'Auditoria completa de cada plano', 'Prioridade na geração'],
 			cta: 'Começar agora',
 			featured: true,
 			mensal: {
-				price: 'R$ 149,90',
+				price: 'R$ 99,90',
 				period: '/mês',
 				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=pro_mensal')
 			},
 			anual: {
-				price: 'R$ 1.498,80',
+				price: 'R$ 999,00',
 				period: '/ano',
-				was: 'R$ 1.798,80',
-				equiv: 'equivale a R$ 124,90/mês',
+				was: 'R$ 1.198,80',
+				equiv: 'equivale a R$ 83,25/mês',
 				href: '/login?mode=signup&next=' + encodeURIComponent('/assinatura?plan=pro_anual')
 			}
 		},
@@ -1681,9 +1705,16 @@
 	}
 	.pricing-grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 14px;
 		align-items: stretch;
+	}
+	/* São quatro planos: em três colunas o último cairia sozinho numa segunda
+	   linha. O passo intermediário é 2x2 justamente pra nunca sobrar órfão. */
+	@media (max-width: 1024px) {
+		.pricing-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 	.price-card {
 		position: relative;
