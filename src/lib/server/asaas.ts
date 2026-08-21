@@ -17,7 +17,7 @@ export async function asaasGet<T>(path: string): Promise<T> {
 	if (!env.ASAAS_API_KEY) throw new Error('ASAAS_API_KEY não configurada');
 	const res = await fetch(`${BASE_URL}${path}`, {
 		headers: {
-			'access_token': env.ASAAS_API_KEY,
+			access_token: env.ASAAS_API_KEY,
 			'User-Agent': 'preceptor-fisic',
 			'Content-Type': 'application/json'
 		},
@@ -37,35 +37,70 @@ export async function asaasGet<T>(path: string): Promise<T> {
  * isso o fallback por valor em planFromPayment().
  */
 export const PAYMENT_LINKS = {
+	basico_mensal: {
+		id: 'libelzxh4qsxgyhr',
+		url: 'https://www.asaas.com/c/libelzxh4qsxgyhr',
+		plan: 'basico',
+		value: 39.9,
+		months: 1
+	},
+	basico_anual: {
+		id: 'sfebwi7jrwm50h01',
+		url: 'https://www.asaas.com/c/sfebwi7jrwm50h01',
+		plan: 'basico',
+		value: 399.0,
+		months: 12
+	},
 	essencial_mensal: {
 		id: '5c8m1fhyd6c3tsaq',
 		url: 'https://www.asaas.com/c/5c8m1fhyd6c3tsaq',
 		plan: 'essencial',
-		value: 69.9,
+		value: 49.9,
 		months: 1
 	},
 	essencial_anual: {
-		id: 'n2xcnopwqy3n305n',
-		url: 'https://www.asaas.com/c/n2xcnopwqy3n305n',
+		id: 'zuk00f4ky0d48i8s',
+		url: 'https://www.asaas.com/c/zuk00f4ky0d48i8s',
 		plan: 'essencial',
-		value: 699.0,
+		value: 499.0,
 		months: 12
 	},
 	pro_mensal: {
 		id: 'qihvgcw48aajit37',
 		url: 'https://www.asaas.com/c/qihvgcw48aajit37',
 		plan: 'pro',
-		value: 149.9,
+		value: 99.9,
 		months: 1
 	},
 	pro_anual: {
-		id: '9208gp2b2h8mduc7',
-		url: 'https://www.asaas.com/c/9208gp2b2h8mduc7',
+		id: 'cj2sxv3cru6tl6eh',
+		url: 'https://www.asaas.com/c/cj2sxv3cru6tl6eh',
 		plan: 'pro',
-		value: 1498.8,
+		value: 999.0,
 		months: 12
 	}
 } as const;
+
+/**
+ * Preços da tabela anterior a agosto/2026 (Essencial R$ 69,90/699,00 e Pro
+ * R$ 149,90/1.498,80). NÃO entram em PAYMENT_LINKS de propósito: a tela de
+ * assinatura valida o plano contra as chaves desse objeto, e um legado ali
+ * voltaria a ficar comprável.
+ *
+ * Existem porque assinatura criada por API renova SEM paymentLink no payload,
+ * então o reconhecimento cai no valor — e os dois links mensais foram
+ * reaproveitados com o preço novo, então o id antigo não serve de pista. Sem
+ * este mapa, a renovação de quem assinou na tabela antiga não seria
+ * reconhecida e o webhook derrubaria o acesso de quem está pagando em dia.
+ *
+ * O sufixo _legacy casa com PLAN_LIMITS e preserva a franquia contratada.
+ */
+const LEGACY_VALUES = [
+	{ plan: 'essencial_legacy', value: 69.9, months: 1 },
+	{ plan: 'essencial_legacy', value: 699.0, months: 12 },
+	{ plan: 'pro_legacy', value: 149.9, months: 1 },
+	{ plan: 'pro_legacy', value: 1498.8, months: 12 }
+] as const;
 
 export interface AsaasPaymentPayload {
 	id?: string;
@@ -78,9 +113,10 @@ export interface AsaasPaymentPayload {
 }
 
 /**
- * Resolve o plano de um payment: primeiro pelo paymentLink, depois pelo
- * valor (renovações). Retorna null se não reconhecer (ex: ebook, cobrança
- * avulsa criada à mão) — nesse caso o webhook não mexe na assinatura.
+ * Resolve o plano de um payment: primeiro pelo paymentLink, depois pelo valor
+ * (renovações), e por último pelos valores da tabela antiga. Retorna null se não
+ * reconhecer (ex: ebook, cobrança avulsa criada à mão) — nesse caso o webhook
+ * não mexe na assinatura.
  */
 export function planFromPayment(
 	payment: AsaasPaymentPayload
@@ -93,6 +129,10 @@ export function planFromPayment(
 	if (typeof payment.value === 'number') {
 		const byValue = links.find((l) => Math.abs(l.value - payment.value!) < 0.01);
 		if (byValue) return { plan: byValue.plan, months: byValue.months };
+		// Tabela antiga por último: nenhum valor legado colide com os atuais, mas
+		// a ordem deixa explícito que o catálogo em venda tem precedência.
+		const legado = LEGACY_VALUES.find((l) => Math.abs(l.value - payment.value!) < 0.01);
+		if (legado) return { plan: legado.plan, months: legado.months };
 	}
 	return null;
 }
@@ -125,7 +165,7 @@ async function asaasPost<T>(path: string, body: unknown): Promise<T> {
 	const res = await fetch(`${BASE_URL}${path}`, {
 		method: 'POST',
 		headers: {
-			'access_token': env.ASAAS_API_KEY,
+			access_token: env.ASAAS_API_KEY,
 			'User-Agent': 'preceptor-fisic',
 			'Content-Type': 'application/json'
 		},
@@ -171,9 +211,9 @@ export async function createAsaasCustomer(input: {
  * cobranças por mês. Pior que cobrar em dobro: quando a cobrança órfã vence sem
  * pagamento, o webhook rebaixa pra past_due e derruba o acesso de quem está em dia.
  */
-export async function listActiveSubscriptions(customerId: string): Promise<
-	Array<{ id: string; status: string; description?: string }>
-> {
+export async function listActiveSubscriptions(
+	customerId: string
+): Promise<Array<{ id: string; status: string; description?: string }>> {
 	const r = await asaasGet<{ data?: Array<{ id: string; status: string; description?: string }> }>(
 		`/subscriptions?customer=${encodeURIComponent(customerId)}&status=ACTIVE&limit=20`
 	);

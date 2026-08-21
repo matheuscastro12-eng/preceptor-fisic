@@ -346,10 +346,11 @@
 					de alunos ativos e pelo número de treinos gerados por mês:
 				</p>
 				<ul class="plain">
+					<li><strong>Básico</strong>, até 40 alunos ativos e 8 treinos gerados por mês</li>
 					<li>
-						<strong>Essencial</strong>, até 60 alunos ativos e 20 treinos gerados por mês
+						<strong>Essencial</strong>, até 60 alunos ativos e 11 treinos gerados por mês
 					</li>
-					<li><strong>Pro</strong>, até 150 alunos ativos e 50 treinos gerados por mês</li>
+					<li><strong>Pro</strong>, até 150 alunos ativos e 25 treinos gerados por mês</li>
 					<li>
 						<strong>Institucional</strong>, até 5 profissionais na mesma clínica, alunos ilimitados e 100 treinos
 						gerados por mês

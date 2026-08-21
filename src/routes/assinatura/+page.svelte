@@ -11,8 +11,10 @@
 	const needsCpf = $derived(!prof.asaasCustomerId && !data.cpfNoCadastro);
 	const ativo = $derived(data.situacao === 'ativo');
 
+	/** Chaves compradas em /assinatura. Planos legados ficam de fora de propósito. */
+	type PlanBase = 'basico' | 'essencial' | 'pro';
 	type PlanDef = {
-		base: 'essencial' | 'pro';
+		base: PlanBase;
 		name: string;
 		monthly: string;
 		yearly: string;
@@ -22,14 +24,27 @@
 	};
 	const PLANS: PlanDef[] = [
 		{
+			base: 'basico',
+			name: 'Básico',
+			monthly: 'R$ 39,90',
+			yearly: 'R$ 399,00',
+			desc: 'Para quem está começando a atender população especial.',
+			items: [
+				'Até 40 alunos ativos',
+				'Até 8 treinos por IA/mês',
+				'Histórico completo de planos',
+				'Suporte por e-mail'
+			]
+		},
+		{
 			base: 'essencial',
 			name: 'Essencial',
-			monthly: 'R$ 69,90',
-			yearly: 'R$ 699,00',
+			monthly: 'R$ 49,90',
+			yearly: 'R$ 499,00',
 			desc: 'Para o profissional em crescimento.',
 			items: [
 				'Até 60 alunos ativos',
-				'Até 20 treinos por IA/mês',
+				'Até 11 treinos por IA/mês',
 				'Histórico completo de planos',
 				'Suporte por e-mail'
 			]
@@ -37,13 +52,13 @@
 		{
 			base: 'pro',
 			name: 'Pro',
-			monthly: 'R$ 149,90',
-			yearly: 'R$ 1.498,80',
+			monthly: 'R$ 99,90',
+			yearly: 'R$ 999,00',
 			desc: 'Para quem vive de prescrição clínica.',
 			pop: true,
 			items: [
 				'Até 150 alunos ativos',
-				'Até 50 treinos por IA/mês',
+				'Até 25 treinos por IA/mês',
 				'Auditoria completa de cada plano',
 				'Prioridade na geração'
 			]
@@ -54,14 +69,21 @@
 		encodeURIComponent('Olá! Tenho interesse no plano Institucional do PreceptorFISIC.');
 
 	// Funil da LP: /assinatura?plan=pro_mensal já cai no passo de confirmar.
-	const PLAN_KEYS = ['essencial_mensal', 'essencial_anual', 'pro_mensal', 'pro_anual'];
+	const PLAN_KEYS = [
+		'basico_mensal',
+		'basico_anual',
+		'essencial_mensal',
+		'essencial_anual',
+		'pro_mensal',
+		'pro_anual'
+	];
 	const planParam = page.url.searchParams.get('plan');
 	const preselected = planParam && PLAN_KEYS.includes(planParam) ? planParam : null;
 
 	let annual = $state(preselected?.endsWith('_anual') ?? false);
 	let step = $state<'planos' | 'confirm'>(preselected ? 'confirm' : 'planos');
-	let chosenBase = $state<'essencial' | 'pro' | null>(
-		preselected ? (preselected.split('_')[0] as 'essencial' | 'pro') : null
+	let chosenBase = $state<PlanBase | null>(
+		preselected ? (preselected.split('_')[0] as PlanBase) : null
 	);
 	let cpf = $state('');
 	let submitting = $state(false);
@@ -69,7 +91,7 @@
 	const chosen = $derived(PLANS.find((p) => p.base === chosenBase) ?? null);
 	const chosenKey = $derived(chosenBase ? `${chosenBase}_${annual ? 'anual' : 'mensal'}` : '');
 
-	function escolher(base: 'essencial' | 'pro') {
+	function escolher(base: PlanBase) {
 		chosenBase = base;
 		step = 'confirm';
 	}
@@ -439,9 +461,16 @@
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 14px;
 		align-items: stretch;
+	}
+	/* Três planos do each mais o card fixo do Institucional: em três colunas o
+	   último cairia sozinho. O 2x2 intermediário evita a linha órfã. */
+	@media (max-width: 1024px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 	.card {
 		position: relative;

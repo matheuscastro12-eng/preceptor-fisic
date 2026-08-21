@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	hasActiveSubscription,
-	limitsFor,
-	currentCycleStart,
-	PLAN_LIMITS
-} from './subscription';
+import { hasActiveSubscription, limitsFor, currentCycleStart, PLAN_LIMITS } from './subscription';
 
 const dias = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 
@@ -58,8 +53,20 @@ describe('hasActiveSubscription', () => {
 
 describe('limitsFor', () => {
 	it('usa os limites do plano contratado', () => {
-		expect(limitsFor({ subscriptionPlan: 'essencial' })).toEqual({ students: 60, generations: 20 });
-		expect(limitsFor({ subscriptionPlan: 'pro' })).toEqual({ students: 150, generations: 50 });
+		expect(limitsFor({ subscriptionPlan: 'basico' })).toEqual({ students: 40, generations: 8 });
+		expect(limitsFor({ subscriptionPlan: 'essencial' })).toEqual({ students: 60, generations: 11 });
+		expect(limitsFor({ subscriptionPlan: 'pro' })).toEqual({ students: 150, generations: 25 });
+	});
+
+	it('planos legados preservam a franquia da tabela antiga', () => {
+		expect(limitsFor({ subscriptionPlan: 'essencial_legacy' })).toEqual({
+			students: 60,
+			generations: 20
+		});
+		expect(limitsFor({ subscriptionPlan: 'pro_legacy' })).toEqual({
+			students: 150,
+			generations: 50
+		});
 	});
 
 	it('institucional não tem teto de alunos', () => {

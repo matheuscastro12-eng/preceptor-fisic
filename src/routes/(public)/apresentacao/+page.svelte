@@ -65,19 +65,27 @@
 
 	const PLANOS_AUTONOMO = [
 		{
+			nome: 'Básico',
+			mes: 'R$ 39,90',
+			ano: 'R$ 399,00',
+			para: 'Para quem está começando a atender população especial.',
+			itens: ['Até 40 alunos ativos', 'Até 8 treinos gerados por mês', 'Histórico completo de planos', 'Suporte por e-mail'],
+			destaque: false
+		},
+		{
 			nome: 'Essencial',
-			mes: 'R$ 69,90',
-			ano: 'R$ 699,00',
+			mes: 'R$ 49,90',
+			ano: 'R$ 499,00',
 			para: 'Para quem já atende população especial no dia a dia.',
-			itens: ['Até 60 alunos ativos', 'Até 20 treinos gerados por mês', 'Histórico completo de planos', 'Suporte por e-mail'],
+			itens: ['Até 60 alunos ativos', 'Até 11 treinos gerados por mês', 'Histórico completo de planos', 'Suporte por e-mail'],
 			destaque: false
 		},
 		{
 			nome: 'Pro',
-			mes: 'R$ 149,90',
-			ano: 'R$ 1.498,80',
+			mes: 'R$ 99,90',
+			ano: 'R$ 999,00',
 			para: 'Para quem vive de prescrição clínica.',
-			itens: ['Até 150 alunos ativos', 'Até 50 treinos gerados por mês', 'Auditoria completa de cada plano', 'Prioridade na geração'],
+			itens: ['Até 150 alunos ativos', 'Até 25 treinos gerados por mês', 'Auditoria completa de cada plano', 'Prioridade na geração'],
 			destaque: true
 		}
 	];
@@ -510,7 +518,9 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
 		gap: 16px;
-		max-width: 760px;
+		/* 760px cabia os dois planos de antes. Com três, o terceiro caía sozinho
+		   numa segunda linha; 1080px acompanha a largura do resto da página. */
+		max-width: 1080px;
 	}
 	.planos-um { max-width: 420px; }
 	.plano {
