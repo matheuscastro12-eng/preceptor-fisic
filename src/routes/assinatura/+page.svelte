@@ -96,6 +96,16 @@
 		step = 'confirm';
 	}
 
+	/**
+	 * Nome do plano pra leitura humana. O sufixo _legacy é detalhe interno de
+	 * quem assinou na tabela antiga: mostrar "Plano Essencial_legacy" na página
+	 * de cobrança de um assinante parece defeito.
+	 */
+	function nomePlano(plano: string) {
+		const base = plano.replace(/_legacy$/, '');
+		return base.charAt(0).toUpperCase() + base.slice(1);
+	}
+
 	function fmtDate(d: Date | string | null) {
 		if (!d) return null;
 		return new Date(d).toLocaleDateString('pt-BR', {
@@ -137,7 +147,7 @@
 				<h1>Sua assinatura está ativa.</h1>
 				<p class="sub">
 					{#if prof.subscriptionPlan}
-						Plano {prof.subscriptionPlan.charAt(0).toUpperCase() + prof.subscriptionPlan.slice(1)}.
+						Plano {nomePlano(prof.subscriptionPlan)}.
 					{/if}
 					{#if prof.subscriptionExpiresAt}
 						Válida até {fmtDate(prof.subscriptionExpiresAt)}.
