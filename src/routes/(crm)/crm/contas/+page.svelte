@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button, Chip, Avatar, toast } from '$lib/components/ui';
 	import { enhance } from '$app/forms';
+	import { planLabel, isLegacyPlan } from '$lib/planos';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -57,6 +58,17 @@
 		if (c.subscriptionStatus === 'past_due')
 			return { label: 'Pendente', cor: 'var(--warn)', dias: 0 };
 		return { label: 'Sem acesso', cor: 'var(--ink-3)', dias: 0 };
+	}
+
+	/**
+	 * Franquia em uma linha. null = sem teto (Institucional, contas internas),
+	 * e nesse caso o texto diz "ilimitado" em vez de sumir: no suporte, campo
+	 * vazio se confunde com dado faltando.
+	 */
+	function franquia(l: { students: number | null; generations: number | null }) {
+		const alunos = l.students == null ? 'alunos ilimitados' : `${l.students} alunos`;
+		const ger = l.generations == null ? 'gerações ilimitadas' : `${l.generations} gerações/mês`;
+		return `${alunos} · ${ger}`;
 	}
 
 	async function copiar(texto: string) {
@@ -145,8 +157,21 @@
 				<div class="nome">
 					{c.name}
 					{#if c.isAdmin}<Chip>admin</Chip>{/if}
+					{#if planLabel(c.subscriptionPlan)}
+						<Chip>{planLabel(c.subscriptionPlan)}</Chip>
+					{:else}
+						<!-- Conta com acesso e sem plano gravado cai no DEFAULT_LIMITS do
+						     Essencial. Marcar é melhor que omitir: sem o chip a linha se
+						     confunde com dado faltando, e a franquia mostrada ao lado
+						     parece contratada quando na verdade é fallback. -->
+						<Chip>sem plano</Chip>
+					{/if}
+					{#if isLegacyPlan(c.subscriptionPlan)}
+						<Chip>tabela antiga</Chip>
+					{/if}
 				</div>
 				<div class="mail">{c.email}</div>
+				<div class="franquia">{franquia(c.limites)}</div>
 			</div>
 			<div class="meta">
 				<span class="ponto" style="background:{s.cor}"></span>
@@ -335,6 +360,11 @@
 	.mail {
 		font: 400 12.5px var(--font-mono);
 		color: var(--ink-2);
+		margin-top: 2px;
+	}
+	.franquia {
+		font: var(--body-xs, var(--body-sm));
+		color: var(--ink-3);
 		margin-top: 2px;
 	}
 	.meta {

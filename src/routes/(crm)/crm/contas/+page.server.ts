@@ -17,6 +17,7 @@ import { professionals } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/public';
 import { env as privEnv } from '$env/dynamic/private';
 import { getProfessionalByAuthId } from '$lib/server/queries';
+import { limitsFor } from '$lib/server/subscription';
 import { audit, clientFingerprint } from '$lib/server/audit';
 import { logger } from '$lib/server/logger';
 import type { Actions, PageServerLoad } from './$types';
@@ -30,13 +31,20 @@ export const load = (async () => {
 			cref: professionals.cref,
 			isAdmin: professionals.isAdmin,
 			subscriptionStatus: professionals.subscriptionStatus,
+			subscriptionPlan: professionals.subscriptionPlan,
 			subscriptionExpiresAt: professionals.subscriptionExpiresAt,
 			createdAt: professionals.createdAt
 		})
 		.from(professionals)
 		.orderBy(desc(professionals.createdAt));
 
-	return { contas };
+	// A franquia sai daqui pronta: o suporte precisa dela pra responder "por que
+	// não consigo gerar?", e ela não é dedutível do nome do plano na tela — quem
+	// está num plano legado tem franquia diferente de quem assinou a mesma marca
+	// na tabela nova.
+	return {
+		contas: contas.map((c) => ({ ...c, limites: limitsFor(c) }))
+	};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
